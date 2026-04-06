@@ -18,6 +18,18 @@ public final class Keys {
     public static int rowLength(int index){
         return row(index).length();
     }
+        public static final class PianoKey {
+        public final int row, col;
+        public final String label;
+        public boolean broken;
+        public boolean blockedByCat;
+
+        public PianoKey(int row, int col, String label){
+            this.row = row;
+            this.col = col;
+            this.label = label;
+        }
+    }
 }
     
 
