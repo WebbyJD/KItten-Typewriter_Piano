@@ -18,9 +18,6 @@ Middle row will become C4 → B4.
 Bottom row will become D3 → B3.  
 The space bar will then be C3.
 
-### Sharp and Flat
-# will cause the keys to go a semitone higher, and B flat will lower by a semitone.
-
 ## Keyboard Design Notes
 
 These are not the correct key letters.  
