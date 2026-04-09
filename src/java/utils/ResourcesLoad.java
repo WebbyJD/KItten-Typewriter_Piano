@@ -1,4 +1,4 @@
-package java.utils;
+package utils;
 
 public class ResourcesLoad {
     

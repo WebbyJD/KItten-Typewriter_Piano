@@ -1,4 +1,4 @@
-package java.ui;
+package ui;
 
 public class TypeWriterFrame {
     

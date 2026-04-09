@@ -1,4 +1,4 @@
-package java.ui;
+package ui;
 
 public final class Keys {
     public static final String ROW_TOP = "CDEFGABC";
