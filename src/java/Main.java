@@ -6,13 +6,13 @@ import java.awt.event.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CatPiano extends JFrame {
+public class Main extends JFrame {
 
     private Synthesizer synth;
     private MidiChannel channel;
     private Map<Character, Integer> noteMap = new HashMap<>();
 
-    public CatPiano() {
+    public Main() {
         super("Cat Piano");
 
         try {
@@ -121,9 +121,6 @@ public class CatPiano extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            CatPiano piano = new CatPiano();
-            piano.setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new Main().setVisible(true));
     }
 }
