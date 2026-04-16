@@ -12,4 +12,6 @@ public final class CatAssets {
     public final BufferedImage shooToClick = ResourcesLoad.loadImage("shooToClick.png");
     public final BufferedImage settingsButtonOutline = ResourcesLoad.loadImage("SettingsButtonOutline.png");
     public final BufferedImage settingsButtonUnder = ResourcesLoad.loadImage("SettingsButtonUnder.png");
+    public final BufferedImage backOfClock = ResourcesLoad.loadImage("clockBackground.png");
+    public final BufferedImage strings = ResourcesLoad.loadImage("Strings.png");
 }
