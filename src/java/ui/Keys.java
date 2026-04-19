@@ -1,17 +1,22 @@
 package ui;
 
+/**
+ * Key labels left -> right; each string length matches Config row point counts (10, 11, 11, 12).
+ */
 public final class Keys {
-    public static final String ROW_TOP = "CDEFGABC";
-    public static final String ROW_MID = "CDEFGAB";
-    public static final String ROW_BOT = "#DEFGABb";
+    public static final String ROW_1 = "CDEFGABCDE";   // 10
+    public static final String ROW_2 = "CDEFGABCDEF";  // 11
+    public static final String ROW_3 = "#DEFGABCDEb";  // 11 (modifier + naturals + flat modifier)
+    public static final String ROW_4 = "CDEFGABCDEFG"; // 12
 
     private Keys() {}
 
     public static String row(int index) {
         return switch (index) {
-            case 0 -> ROW_TOP;
-            case 1 -> ROW_MID;
-            case 2 -> ROW_BOT;
+            case 0 -> ROW_1;
+            case 1 -> ROW_2;
+            case 2 -> ROW_3;
+            case 3 -> ROW_4;
             default -> throw new IndexOutOfBoundsException("Invalid row: " + index);
         };
     }
@@ -25,38 +30,44 @@ public final class Keys {
     }
 
     public static int baseMidiFor(String label, int rowIndex, int colIndex) {
-        if ("LC".equals(label)) return 48; // C3
-        if ("Bb".equals(label)) return 58; // Bb3
-        // Modifiers do not produce a sound by themselves.
-        if (isModifier(label)) return -1;
-
-        // Starting "C" reference note for each visual row.
-        int cBase = switch (rowIndex) {
-            case 0 -> 72; // C5 row
-            case 1 -> 60; // C4 row
-            case 2 -> 50; // D3-ish row
-            default -> 60;
-        };
-
-        int semitone = switch (label) {
-            case "C" -> 0;
-            case "D" -> 2;
-            case "E" -> 4;
-            case "F" -> 5;
-            case "G" -> 7;
-            case "A" -> 9;
-            case "B" -> 11;
-            default -> 0;
-        };
-
-        int note = cBase + semitone;
-
-        // Top row ends with another C, so push just that last key up an octave.
-        if (rowIndex == 0 && "C".equals(label) && colIndex == ROW_TOP.length() - 1) {
-            note += 12;
+        if ("SP".equals(label)) {
+            return 48;
+        }
+        if (isModifier(label)) {
+            return -1;
         }
 
-        return note;
+        return switch (rowIndex) {
+            case 0 -> row0Midi(colIndex);
+            case 1 -> row1Midi(colIndex);
+            case 2 -> row2Midi(colIndex);
+            case 3 -> row3Midi(colIndex);
+            default -> 60;
+        };
+    }
+
+    private static int row0Midi(int col) {
+        int[] m = {72, 74, 76, 77, 79, 81, 83, 84, 86, 88};
+        return m[Math.min(col, m.length - 1)];
+    }
+
+    private static int row1Midi(int col) {
+        int[] m = {60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77};
+        return m[Math.min(col, m.length - 1)];
+    }
+
+    /** Row 3: '#DEFGABCDEb' — col 0 and col 10 are modifiers. */
+    private static int row2Midi(int col) {
+        int[] m = {50, 52, 53, 55, 57, 59, 60, 62, 64};
+        if (col >= 1 && col <= 9) {
+            return m[col - 1];
+        }
+        return 60;
+    }
+
+    private static int row3Midi(int col) {
+        int[] m = {48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67};
+        return m[Math.min(col, m.length - 1)];
     }
 
     public static final class PianoKey {
@@ -73,5 +84,3 @@ public final class Keys {
         }
     }
 }
-    
-
