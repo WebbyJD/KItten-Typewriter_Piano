@@ -423,7 +423,7 @@ public class TypeWriterFrame extends JFrame {
 
             drawScaled(g2, assets.settingsButtonUnder);
             drawScaled(g2, assets.settingsButtonOutline);
-            drawSettingsButtonText(g2, "S");
+            drawSettingsButtonText(g2, "Sound");
             drawScaled(g2, assets.border);
         }
 
