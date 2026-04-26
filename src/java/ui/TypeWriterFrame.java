@@ -1,18 +1,5 @@
 package ui;
 
-import utils.Config;
-
-import javax.sound.midi.MidiChannel;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Synthesizer;
-import javax.swing.AbstractAction;
-import javax.swing.ActionMap;
-import javax.swing.InputMap;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.KeyStroke;
-import javax.swing.Timer;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -29,6 +16,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import javax.sound.midi.MidiChannel;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.Synthesizer;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+import javax.swing.Timer;
+import utils.Config;
 
 public class TypeWriterFrame extends JFrame {
     private static final Color SOFT_PINK_BG = new Color(245, 191, 215);
@@ -52,6 +51,8 @@ public class TypeWriterFrame extends JFrame {
     private boolean catsBlocking = false;
 
     private boolean settingsOpen = false;
+    private boolean secondScreenOpen = false;   // true when the second screen is active
+    private int notesPlayed = 0;                // counts how many notes have been played
     // 1..100 shown in settings screen and also used as note velocity.
     private int masterVolume = 90;
 
@@ -123,6 +124,16 @@ public class TypeWriterFrame extends JFrame {
 
         channel.noteOn(note, masterVolume);
         activeNotes.put(hotspot, note);
+
+        // Count how many notes have been played.
+        notesPlayed++;
+
+        // After 10 notes, open the second screen.
+        if (notesPlayed >= 10 && !secondScreenOpen) {
+            secondScreenOpen = true;
+            stopAllNotes();          // stop any currently playing notes
+            keyboardPanel.repaint(); // redraw UI to show the new screen
+        }
     }
 
     public void onMouseReleased(Point point) {
@@ -394,7 +405,9 @@ public class TypeWriterFrame extends JFrame {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-            if (settingsOpen) {
+            if (secondScreenOpen) {
+                drawSecondScene(g2);
+            } else if (settingsOpen) {
                 drawSettingsScene(g2);
             } else {
                 Graphics2D playG2 = (Graphics2D) g2.create();
@@ -402,6 +415,7 @@ public class TypeWriterFrame extends JFrame {
                 drawPlayScene(playG2);
                 playG2.dispose();
             }
+
 
             drawVolumeDisplay(g2);
             g2.dispose();
@@ -426,6 +440,26 @@ public class TypeWriterFrame extends JFrame {
             drawSettingsButtonText(g2, "Sound");
             drawScaled(g2, assets.border);
         }
+
+        private void drawSecondScene(Graphics2D g2) {
+            // Fill the whole window with a soft background color.
+            drawScaled(g2, assets.secondScreenBack);
+            drawScaled(g2, assets.strings);
+            drawScaled(g2, assets.Holders);
+            drawScaled(g2, assets.Handels);
+            drawScaled(g2,assets.backOfClock);
+
+            // Draw a centered message.
+            g2.setColor(CREAM_WHITE);
+            g2.setFont(new Font("SansSerif", Font.BOLD, 60));
+            String text = "Fix all of the keys!";
+            FontMetrics metrics = g2.getFontMetrics();
+            int textWidth = metrics.stringWidth(text);
+            int x = (Config.WINDOW_WIDTH - textWidth) / 2 - 70;
+            int y =100;
+            g2.drawString(text, x, y);
+        }
+
 
         private void drawSettingsScene(Graphics2D g2) {
             g2.setColor(SOFT_PINK_BG);
