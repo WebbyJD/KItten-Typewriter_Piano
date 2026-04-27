@@ -10,15 +10,14 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import javax.sound.midi.MidiChannel;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Synthesizer;
+import javax.sound.midi.*;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
@@ -37,7 +36,7 @@ public class TypeWriterFrame extends JFrame {
     private final Random random = new Random();
 
     private Synthesizer synth;
-    private MidiChannel channel;
+    private MidiChannel[] channels;
 
     private final List<KeyHotspot> keyHotspots = new ArrayList<>();
     // Tracks the exact MIDI note started by each hotspot so key release turns off the same note.
@@ -115,14 +114,15 @@ public class TypeWriterFrame extends JFrame {
         }
 
         int note = Keys.baseMidiFor(hotspot.label, hotspot.row, hotspot.col);
-        if (note < 0 || channel == null) return;
+        if (note < 0 || channels[0] == null) return;
 
         note += accidentalOffset;
         note += shiftHeld ? 12 : 0;
         note += pedalOffset;
         note = Math.max(0, Math.min(127, note));
-
-        channel.noteOn(note, masterVolume);
+        channels[0].noteOn(note, masterVolume);
+        //By using channels[0, 1, 2] you can play three different cat sounds
+        System.out.println(shiftHeld);
         activeNotes.put(hotspot, note);
 
         // Count how many notes have been played.
@@ -156,8 +156,8 @@ public class TypeWriterFrame extends JFrame {
         }
 
         Integer note = activeNotes.remove(hotspot);
-        if (note != null && channel != null) {
-            channel.noteOff(note);
+        if (note != null && channels[0] != null) {
+            channels[0].noteOff(note);
         }
     }
 
@@ -210,9 +210,9 @@ public class TypeWriterFrame extends JFrame {
         masterVolume = Math.max(1, Math.min(100, value));
 
         // Also updates channel volume controller, so sustained notes feel consistent.
-        if (channel != null) {
+        if (channels[0] != null) {
             int midiControllerVolume = Math.max(0, Math.min(127, (int) Math.round(masterVolume * 1.27)));
-            channel.controlChange(7, midiControllerVolume);
+            channels[0].controlChange(7, midiControllerVolume);
         }
     }
 
@@ -224,12 +224,22 @@ public class TypeWriterFrame extends JFrame {
     private void initMidi() {
         try {
             synth = MidiSystem.getSynthesizer();
+            Synthesizer synth = MidiSystem.getSynthesizer();
+            File meowFile = new File("assets/audio/meow.sf2");
+            Soundbank msb = MidiSystem.getSoundbank(meowFile);
+            Instrument[] meows = msb.getInstruments();
             synth.open();
-            channel = synth.getChannels()[0];
+            synth.loadInstrument(meows[0]);
+            synth.loadInstrument(meows[1]);
+            synth.loadInstrument(meows[2]);
+            channels = synth.getChannels();
+            channels[0].programChange(meows[0].getPatch().getBank(), meows[0].getPatch().getProgram());
+            channels[1].programChange(meows[1].getPatch().getBank(), meows[1].getPatch().getProgram());
+            channels[2].programChange(meows[2].getPatch().getBank(), meows[2].getPatch().getProgram());
             setMasterVolume(masterVolume);
         } catch (Exception ignored) {
             // Keep UI functional even if MIDI is unavailable on this machine.
-            channel = null;
+            channels = null;
         }
     }
 
@@ -386,9 +396,9 @@ public class TypeWriterFrame extends JFrame {
     }
 
     private void stopAllNotes() {
-        if (channel != null) {
+        if (channels[0] != null) {
             for (Integer note : activeNotes.values()) {
-                channel.noteOff(note);
+                channels[0].noteOff(note);
             }
         }
         activeNotes.clear();

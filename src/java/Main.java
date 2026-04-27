@@ -3,23 +3,27 @@ import javax.sound.midi.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Main extends JFrame {
-
-    private Synthesizer synth;
-    private MidiChannel channel;
+    private MidiChannel[] channels;
     private Map<Character, Integer> noteMap = new HashMap<>();
 
     public Main() {
         super("Cat Piano");
 
         try {
-            synth = MidiSystem.getSynthesizer();
+            Synthesizer synth = MidiSystem.getSynthesizer();
+            File meowFile = new File("assets/audio/meow.sf2");
+            Soundbank msb = MidiSystem.getSoundbank(meowFile);
+            Instrument[] meows = msb.getInstruments();
             synth.open();
-            channel = synth.getChannels()[0];
-           
+            synth.loadInstrument(meows[0]);
+            channels = synth.getChannels();
+            channels[0].programChange(meows[0].getPatch().getBank(), meows[0].getPatch().getProgram());
+
             noteMap.put('A', 60); // C4
             noteMap.put('B', 62); // D4
             noteMap.put('C', 64); // E4
@@ -106,17 +110,17 @@ public class Main extends JFrame {
 
     private void playNoteForChar(char c) {
         c = Character.toUpperCase(c);
-        if (channel != null && noteMap.containsKey(c)) {
+        if (channels[0] != null && noteMap.containsKey(c)) {
             int note = noteMap.get(c);
-            channel.noteOn(note, 90);
+            channels[0].noteOn(note, 90);
         }
     }
 
     private void stopNoteForChar(char c) {
         c = Character.toUpperCase(c);
-        if (channel != null && noteMap.containsKey(c)) {
+        if (channels[0] != null && noteMap.containsKey(c)) {
             int note = noteMap.get(c);
-            channel.noteOff(note);
+            channels[0].noteOff(note);
         }
     }
 
