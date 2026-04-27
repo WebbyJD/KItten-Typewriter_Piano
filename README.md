@@ -1,6 +1,6 @@
-# kitten-Typewriter Project
+# Kitten-Typewriter Project
 
-Our Piano will appear as a typewriter with forty-four keys. Every key will MEOW. The piano pedals will be from our three main kitten’s tails. The keyboard controls are mouse only. The three little kitties will randomly interfere with your playing to sit on the typewriter. It is up to you to be the monster that shoos them. The keys will break often and need mending. This is our integration of planned obsolescence.
+Our typewriter piano will have forty-four keys. Every key will MEOW. The piano pedals will be from our three main kitten’s tails. The keyboard controls are mouse only. The three little kitties will randomly interfere with your playing to sit on the typewriter. It is up to you to be the monster that shoos them. The keys will break often and need mending. This is our integration of planned obsolescence.
 
 ## Key Organisation System
 
@@ -18,7 +18,9 @@ Middle row will become C4 → B4.
 Bottom row will become D3 → B3.  
 The space bar will then be C3.
 
-Sharp and Flat # will cause the keys to go a semitone higher, and B flat will lower by a semitone.
+Sharp[#]and Flat[♭]:
+  Sharp[#] will cause the keys to go a semitone higher
+  Flat[♭] will lower by a semitone.
 
 ## Keyboard Design Notes
 
