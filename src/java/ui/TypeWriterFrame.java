@@ -57,8 +57,10 @@ public class TypeWriterFrame extends JFrame {
     private int notesPlayed = 0;                // counts how many notes have been played
     //broken keys mechanics
     private List<Point> brokenKeyPoints = new ArrayList<>();
+    private double[] fixProgress;
+    private Color[] keyColors;
+    private boolean mouseHeld = false;
     private boolean[] fixedKeys; 
-    private double[] circleProgress;
 
     // 1..100 shown in settings screen and also used as note velocity.
     private int masterVolume = 90;
@@ -93,13 +95,12 @@ public class TypeWriterFrame extends JFrame {
 
 
     private void generateBrokenKeys() {
-
         brokenKeyPoints.clear();
-
-        int count = 15 + random.nextInt(26); // 15–40 broken keys
+        int count = 15 + random.nextInt(7);
 
         fixedKeys = new boolean[count];
-        circleProgress = new double[count];
+        fixProgress = new double[count];
+        keyColors = new Color[count];
 
         Set<Integer> used = new HashSet<>();
 
@@ -109,7 +110,13 @@ public class TypeWriterFrame extends JFrame {
                 brokenKeyPoints.add(HOLDER_POINTS[index]);
             }
         }
+        // initialize colors
+        for (int i = 0; i < count; i++) {
+            fixProgress[i] = 0;
+            keyColors[i] = Color.RED;
+        }
     }
+
 
 
 
@@ -134,7 +141,7 @@ public class TypeWriterFrame extends JFrame {
 
         keyboardPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             @Override
-            public void mouseMoved(java.awt.event.MouseEvent e) {
+            public void mouseDragged(java.awt.event.MouseEvent e) {
                 if (secondScreenOpen) {
                  handleBrokenKeyMotion(e.getPoint());
                 }
@@ -152,6 +159,7 @@ public class TypeWriterFrame extends JFrame {
             return;
         }
         if (secondScreenOpen) {
+            mouseHeld = true;
             return;
         }
 
@@ -203,8 +211,8 @@ public class TypeWriterFrame extends JFrame {
         // Count how many notes have been played.
         notesPlayed++;
 
-        // After 10 notes, open the second screen.
-        if (notesPlayed >= 10 && !secondScreenOpen) {
+        // After 15 notes, open the second screen.
+        if (notesPlayed >= 15 && !secondScreenOpen) {
             secondScreenOpen = true;
             notesPlayed = 0;
             stopAllNotes();          // stop any currently playing notes
@@ -215,6 +223,10 @@ public class TypeWriterFrame extends JFrame {
 
     public void onMouseReleased(Point point) {
         if (settingsOpen) {
+            return;
+        }
+        if (secondScreenOpen) {
+            mouseHeld = false;
             return;
         }
 
@@ -489,6 +501,7 @@ public class TypeWriterFrame extends JFrame {
     }
 
     private void handleBrokenKeyMotion(Point p) {
+        if (!mouseHeld) return;
 
         for (int i = 0; i < brokenKeyPoints.size(); i++) {
             if (fixedKeys[i]) continue;
@@ -499,33 +512,35 @@ public class TypeWriterFrame extends JFrame {
             double dy = p.y - target.y;
             double dist = Math.sqrt(dx*dx + dy*dy);
 
-            // User must be within 40px radius
-            if (dist < 40 && dist > 20) {
+            // Cursor must be inside the ring
+                if (dist < 40 && dist > 20) {
+                    // Add progress based on movement amount
+                    fixProgress[i] += 2.5; // tune speed here
 
-                // Compute angle
-                double angle = Math.toDegrees(Math.atan2(dy, dx));
-                if (angle < 0) angle += 360;
-
-                // Increase progress
-                circleProgress[i] += 4; // tune sensitivity
-
-                if (circleProgress[i] >= 360) {
-                    fixedKeys[i] = true;
-                    }
+                    if (fixProgress[i] >= 100) {
+                        fixedKeys[i] = true;
+                        // Assign random color (not red)
+                        keyColors[i] = new Color(
+                        50 + random.nextInt(205),
+                        50 + random.nextInt(205),
+                        50 + random.nextInt(205)
+                    );
                 }
+            }
         }
-            // Check if all keys are fixed
-            boolean allFixed = true;
-            for (boolean f : fixedKeys) {
-                if (!f) { allFixed = false; break; }
-            }
+        
+        // Check if all keys are fixed
+        boolean allFixed = true;
+        for (boolean f : fixedKeys) {
+            if (!f) { allFixed = false; break; }
+        }
 
-            if (allFixed) {
-                secondScreenOpen = false;
-                keyboardPanel.repaint();
-            }
+        if (allFixed) {
+            secondScreenOpen = false;
+            mouseHeld = false;
+        }
 
-            keyboardPanel.repaint();
+        keyboardPanel.repaint();
     }
 
 
@@ -585,29 +600,71 @@ public class TypeWriterFrame extends JFrame {
             drawScaled(g2, assets.Handels);
 
             // Draw broken key points
-            g2.setColor(Color.RED);
             for (int i = 0; i < brokenKeyPoints.size(); i++) {
+                g2.setColor(keyColors[i]);
                 Point p = brokenKeyPoints.get(i);
-
-                if (!fixedKeys[i]) {
-                    g2.fillOval(p.x - 10, p.y - 10, 20, 20);
-                } else {
-                    g2.setColor(Color.GREEN);
-                    g2.fillOval(p.x - 10, p.y - 10, 20, 20);
-                    g2.setColor(Color.RED);
-                }
+                g2.fillOval(p.x - 10, p.y - 10, 20, 20);
             }
 
-
-            g2.setColor(CREAM_WHITE);
-            g2.setFont(new Font("SansSerif", Font.BOLD, 60));
-            String text = "Fix all of the keys!";
+            g2.setFont(new Font("SansSerif", Font.BOLD, 35));
+            
+            String text = "Oh no! Looks like some keys are broken!";
             FontMetrics metrics = g2.getFontMetrics();
             int textWidth = metrics.stringWidth(text);
-            int x = (Config.WINDOW_WIDTH - textWidth) / 2 - 70;
-            int y =100;
+            int x = (Config.WINDOW_WIDTH - textWidth) / 2;
+            int y = 60;
+
+            // Draw black outline (4 directions)
+            g2.setColor(Color.BLACK);
+            g2.drawString(text, x - 2, y);
+            g2.drawString(text, x + 2, y);
+            g2.drawString(text, x, y - 2);
+            g2.drawString(text, x, y + 2);
+
+            // Draw main text on top
+            g2.setColor(CREAM_WHITE);
             g2.drawString(text, x, y);
+
+            g2.setFont(new Font("SansSerif", Font.BOLD, 25));
+            String sub1 = "Let’s quickly fix them!";
+            String sub2 = "Click and move your cursor around each broken key.";
+
+            // Line 1
+            FontMetrics fm = g2.getFontMetrics();
+            int w1 = fm.stringWidth(sub1);
+            int x1 = (Config.WINDOW_WIDTH - w1) / 2;
+            int y1 = 110;
+
+            // Outline
+            g2.setColor(Color.BLACK);
+            g2.drawString(sub1, x1 - 2, y1);
+            g2.drawString(sub1, x1 + 2, y1);
+            g2.drawString(sub1, x1, y1 - 2);
+            g2.drawString(sub1, x1, y1 + 2);
+
+            // Main text
+            g2.setColor(CREAM_WHITE);
+            g2.drawString(sub1, x1, y1);
+
+
+            // Line 2
+            int w2 = fm.stringWidth(sub2);
+            int x2 = (Config.WINDOW_WIDTH - w2) / 2 - 70;
+            int y2 = y1 + 45; // spacing below line 1
+
+            // Outline
+            g2.setColor(Color.BLACK);
+            g2.drawString(sub2, x2 - 2, y2);
+            g2.drawString(sub2, x2 + 2, y2);
+            g2.drawString(sub2, x2, y2 - 2);
+            g2.drawString(sub2, x2, y2 + 2);
+
+            // Main text
+            g2.setColor(CREAM_WHITE);
+            g2.drawString(sub2, x2, y2);
+
         }
+
 
 
         private void drawSettingsScene(Graphics2D g2) {
