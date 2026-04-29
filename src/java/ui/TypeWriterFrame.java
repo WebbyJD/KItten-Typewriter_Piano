@@ -14,9 +14,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import javax.sound.midi.*;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -51,12 +53,65 @@ public class TypeWriterFrame extends JFrame {
     private boolean angryCatsVisible = false;
 
     private boolean settingsOpen = false;
-    private boolean secondScreenOpen = false;   // true when the second screen is active
+    private boolean secondScreenOpen = false;
     private int notesPlayed = 0;                // counts how many notes have been played
+    //broken keys mechanics
+    private List<Point> brokenKeyPoints = new ArrayList<>();
+    private boolean[] fixedKeys; 
+    private double[] circleProgress;
+
     // 1..100 shown in settings screen and also used as note velocity.
     private int masterVolume = 90;
 
     private final List<FloatingNumber> floatingNumbers = new ArrayList<>();
+
+    private static final Point[] HOLDER_POINTS = {
+        // Row 1 (10)
+        new Point(116, 251), new Point(203, 252), new Point(294, 251),
+        new Point(384, 251), new Point(468, 254), new Point(557, 254),
+        new Point(642, 256), new Point(726, 257), new Point(814, 257),
+        new Point(899, 256),
+
+        // Row 2 (11)
+        new Point(89, 359),  new Point(171, 358), new Point(258, 359),
+        new Point(344, 360), new Point(429, 358), new Point(512, 359),
+        new Point(590, 360), new Point(674, 360), new Point(757, 362),
+        new Point(837, 361), new Point(912, 362),
+
+        // Row 3 (11)
+        new Point(129, 449), new Point(208, 450), new Point(286, 448),
+        new Point(369, 448), new Point(450, 449), new Point(528, 449),
+        new Point(605, 449), new Point(684, 451), new Point(764, 448),
+        new Point(839, 450), new Point(915, 452),
+
+        // Row 4 (12)
+        new Point(75, 526),  new Point(176, 527), new Point(255, 526),
+        new Point(334, 527), new Point(414, 527), new Point(488, 525),
+        new Point(565, 523), new Point(639, 526), new Point(712, 524),
+        new Point(786, 526), new Point(861, 522), new Point(937, 525)
+    };
+
+
+    private void generateBrokenKeys() {
+
+        brokenKeyPoints.clear();
+
+        int count = 15 + random.nextInt(26); // 15–40 broken keys
+
+        fixedKeys = new boolean[count];
+        circleProgress = new double[count];
+
+        Set<Integer> used = new HashSet<>();
+
+        while (brokenKeyPoints.size() < count) {
+            int index = random.nextInt(HOLDER_POINTS.length);
+            if (used.add(index)) {
+                brokenKeyPoints.add(HOLDER_POINTS[index]);
+            }
+        }
+    }
+
+
 
     private final KeyboardPanel keyboardPanel = new KeyboardPanel();
     private Timer catTimer;
@@ -77,6 +132,16 @@ public class TypeWriterFrame extends JFrame {
         MouseInput mouseInput = new MouseInput(this);
         keyboardPanel.addMouseListener(mouseInput);
 
+        keyboardPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                if (secondScreenOpen) {
+                 handleBrokenKeyMotion(e.getPoint());
+                }
+            }
+        });
+
+
         installShiftBinding();
         startFloatingAnimationTimer();
         startCatTimer();
@@ -86,6 +151,10 @@ public class TypeWriterFrame extends JFrame {
         if (settingsOpen) {
             return;
         }
+        if (secondScreenOpen) {
+            return;
+        }
+
 
         Point modelPoint = toModelPoint(point);
         if (catsBlocking) return;
@@ -137,7 +206,9 @@ public class TypeWriterFrame extends JFrame {
         // After 10 notes, open the second screen.
         if (notesPlayed >= 10 && !secondScreenOpen) {
             secondScreenOpen = true;
+            notesPlayed = 0;
             stopAllNotes();          // stop any currently playing notes
+            generateBrokenKeys();
             keyboardPanel.repaint(); // redraw UI to show the new screen
         }
     }
@@ -169,6 +240,10 @@ public class TypeWriterFrame extends JFrame {
     }
 
     public void onMouseClicked(Point point) {
+        if (secondScreenOpen) {
+            return;
+        }
+
         if (settingsOpen) {
             handleSettingsClick(point);
             return;
@@ -413,6 +488,47 @@ public class TypeWriterFrame extends JFrame {
         pedalOffset = 0;
     }
 
+    private void handleBrokenKeyMotion(Point p) {
+
+        for (int i = 0; i < brokenKeyPoints.size(); i++) {
+            if (fixedKeys[i]) continue;
+
+            Point target = brokenKeyPoints.get(i);
+
+            double dx = p.x - target.x;
+            double dy = p.y - target.y;
+            double dist = Math.sqrt(dx*dx + dy*dy);
+
+            // User must be within 40px radius
+            if (dist < 40 && dist > 20) {
+
+                // Compute angle
+                double angle = Math.toDegrees(Math.atan2(dy, dx));
+                if (angle < 0) angle += 360;
+
+                // Increase progress
+                circleProgress[i] += 4; // tune sensitivity
+
+                if (circleProgress[i] >= 360) {
+                    fixedKeys[i] = true;
+                    }
+                }
+        }
+            // Check if all keys are fixed
+            boolean allFixed = true;
+            for (boolean f : fixedKeys) {
+                if (!f) { allFixed = false; break; }
+            }
+
+            if (allFixed) {
+                secondScreenOpen = false;
+                keyboardPanel.repaint();
+            }
+
+            keyboardPanel.repaint();
+    }
+
+
     private class KeyboardPanel extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
@@ -467,9 +583,22 @@ public class TypeWriterFrame extends JFrame {
             drawScaled(g2, assets.strings);
             drawScaled(g2, assets.Holders);
             drawScaled(g2, assets.Handels);
-            drawScaled(g2,assets.backOfClock);
 
-            // Draw a centered message.
+            // Draw broken key points
+            g2.setColor(Color.RED);
+            for (int i = 0; i < brokenKeyPoints.size(); i++) {
+                Point p = brokenKeyPoints.get(i);
+
+                if (!fixedKeys[i]) {
+                    g2.fillOval(p.x - 10, p.y - 10, 20, 20);
+                } else {
+                    g2.setColor(Color.GREEN);
+                    g2.fillOval(p.x - 10, p.y - 10, 20, 20);
+                    g2.setColor(Color.RED);
+                }
+            }
+
+
             g2.setColor(CREAM_WHITE);
             g2.setFont(new Font("SansSerif", Font.BOLD, 60));
             String text = "Fix all of the keys!";
