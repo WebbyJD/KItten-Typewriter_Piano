@@ -48,6 +48,7 @@ public class TypeWriterFrame extends JFrame {
     private int accidentalOffset = 0;
     private int pedalOffset = 0;
     private boolean catsBlocking = false;
+    private boolean angryCatsVisible = false;
 
     private boolean settingsOpen = false;
     private boolean secondScreenOpen = false;   // true when the second screen is active
@@ -78,8 +79,7 @@ public class TypeWriterFrame extends JFrame {
 
         installShiftBinding();
         startFloatingAnimationTimer();
-        // Random cat + shoo minigame: currently off while key mapping is in progress.
-        // To bring it back, call startCatTimer() here.
+        startCatTimer();
     }
 
     public void onMousePressed(Point point) {
@@ -93,14 +93,20 @@ public class TypeWriterFrame extends JFrame {
         // Pedal tails apply a temporary pitch offset while held.
         if (Config.LEFT_PEDAL_HITBOX.contains(modelPoint)) {
             pedalOffset = -12;
+            angryCatsVisible = true;
+            keyboardPanel.repaint();
             return;
         }
         if (Config.RIGHT_PEDAL_HITBOX.contains(modelPoint)) {
             pedalOffset = 12;
+            angryCatsVisible = true;
+            keyboardPanel.repaint();
             return;
         }
         if (Config.MIDDLE_PEDAL_HITBOX.contains(modelPoint)) {
             pedalOffset = 0;
+            angryCatsVisible = true;
+            keyboardPanel.repaint();
             return;
         }
 
@@ -142,6 +148,7 @@ public class TypeWriterFrame extends JFrame {
         }
 
         Point modelPoint = toModelPoint(point);
+        angryCatsVisible = false;
         if (Config.LEFT_PEDAL_HITBOX.contains(modelPoint) || Config.RIGHT_PEDAL_HITBOX.contains(modelPoint)) {
             pedalOffset = 0;
         }
@@ -302,8 +309,8 @@ public class TypeWriterFrame extends JFrame {
     }
 
     private void startCatTimer() {
-        catTimer = new Timer(2000, e -> {
-            if (!catsBlocking && random.nextDouble() < 0.25) {
+        catTimer = new Timer(25000, e -> {
+            if (!catsBlocking) {
                 catsBlocking = true;
                 stopAllNotes();
                 Arrays.fill(shooHeartsClicked, false);
@@ -436,6 +443,9 @@ public class TypeWriterFrame extends JFrame {
             drawScaled(g2, assets.keysBackground);
             drawKeyLabels(g2);
             drawScaled(g2, assets.catHeadsAndTailPeadles);
+            if (angryCatsVisible) {
+                drawScaled(g2, assets.angryCats);
+            }
 
             if (catsBlocking) {
                 drawScaled(g2, assets.catsOnTopOfKeyboard);
