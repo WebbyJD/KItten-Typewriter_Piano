@@ -154,9 +154,11 @@ public class TypeWriterFrame extends JFrame {
     }
 
     public void onMousePressed(Point point) {
+        // block piano clicks while settings page is open
         if (settingsOpen) {
             return;
         }
+        // in repair screen we only care about hold + drag
         if (secondScreenOpen) {
             mouseHeld = true;
             return;
@@ -164,6 +166,7 @@ public class TypeWriterFrame extends JFrame {
 
 
         Point modelPoint = toModelPoint(point);
+        // while cats are blocking, ignore key input
         if (catsBlocking) return;
 
         // Pedal tails apply a temporary pitch offset while held.
@@ -219,6 +222,7 @@ public class TypeWriterFrame extends JFrame {
     }
 
     public void onMouseReleased(Point point) {
+        // no piano release actions while settings is open
         if (settingsOpen) {
             return;
         }
@@ -228,6 +232,7 @@ public class TypeWriterFrame extends JFrame {
         }
 
         Point modelPoint = toModelPoint(point);
+        // releasing input hides angry eyebrow overlay
         angryCatsVisible = false;
         if (Config.LEFT_PEDAL_HITBOX.contains(modelPoint) || Config.RIGHT_PEDAL_HITBOX.contains(modelPoint)) {
             pedalOffset = 0;
@@ -249,6 +254,7 @@ public class TypeWriterFrame extends JFrame {
     }
 
     public void onMouseClicked(Point point) {
+        // clicks are disabled in repair scene (drag is used instead)
         if (secondScreenOpen) {
             // no click actions here, repair uses drag movement
             return;
@@ -282,6 +288,7 @@ public class TypeWriterFrame extends JFrame {
 
     private void handleSettingsClick(Point point) {
         Point modelPoint = toModelPoint(point);
+        // same paw button acts as back from settings
         if (Config.SETTINGS_BUTTON_HITBOX.contains(modelPoint)) {
             settingsOpen = false;
             keyboardPanel.repaint();
@@ -314,6 +321,7 @@ public class TypeWriterFrame extends JFrame {
 
     private void initMidi() {
         try {
+            // open synth and set channels before loading meow instruments
             synth = MidiSystem.getSynthesizer();
             synth.open();
             channels = synth.getChannels();
@@ -427,6 +435,7 @@ public class TypeWriterFrame extends JFrame {
     }
 
     private void startFloatingAnimationTimer() {
+        // 33ms tick ~= 30fps for smooth floating numbers
         floatingAnimationTimer = new Timer(33, e -> {
             if (settingsOpen) {
                 updateFloatingNumbers();
@@ -493,6 +502,7 @@ public class TypeWriterFrame extends JFrame {
     }
 
     private void stopAllNotes() {
+        // safety stop so no notes get stuck when scene/state changes
         if (channels != null && channels[0] != null) {
             for (Integer note : activeNotes.values()) {
                 channels[0].noteOff(note);
@@ -504,6 +514,7 @@ public class TypeWriterFrame extends JFrame {
     }
 
     private void handleBrokenKeyMotion(Point p) {
+        // only progress repairs while mouse button is held down
         if (!mouseHeld) return;
 
         for (int i = 0; i < brokenKeyPoints.size(); i++) {
@@ -554,6 +565,7 @@ public class TypeWriterFrame extends JFrame {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
+            // scene priority: repair -> settings -> main play scene
             if (secondScreenOpen) {
                 drawSecondScene(g2);
             } else if (settingsOpen) {
