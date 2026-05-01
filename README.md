@@ -6,8 +6,9 @@ Our typewriter piano will have forty-four keys. Every key will MEOW. The piano p
 
 ### Rows
 The top row will be CDEFGABC.  
-The middle row will be CDEFGAB.  
-The bottom row will be [#]DEFGAB[b].
+The  first middle row will be CDEFGAB.  
+The second middle row will be [#]DEFGAB[b].
+The bottom row will be CDEFGABC.
 
 The space bar will be [low C] and B flat after it.
 
@@ -25,8 +26,7 @@ Sharp[#]and Flat[♭]:
 ## Keyboard Design Notes
 
 These are not the correct key letters.  
-Pressing **S** opens settings.  
-Design-wise, the cat tails will appear emerging from underneath the typewriter, not as depicted above.  
+Pressing **Settings** opens a volume selection screen.   
 The kitten designs will remain the same.  
 The buttons and typewriter background should appear more gradient and outlined.
 
@@ -36,8 +36,7 @@ The kittens will randomly appear on top of the typewriter, and this may be often
 
 ## Settings
 
-In settings there will be volume settings “floating around.” Hopefully, you can catch the number you are looking for. Design-wise the numbers will be in a gradient sort of bubble with a nicer font.
-
+In settings there will be volume settings “floating around.” Hopefully, you can catch the number you are looking for.
 ## Mechanical and Visual Details
 
 Instead of a single screw, each button has its own separate one; the user turns it in a circle using the mouse until they set the correct note (perhaps we could add a sound or a small animation when it’s in the correct position).
