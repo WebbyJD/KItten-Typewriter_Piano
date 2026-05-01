@@ -43,4 +43,15 @@ Instead of a single screw, each button has its own separate one; the user turns 
 
 The strings extend from the buttons off-screen to create a more unsettling visual for the user.
 
+## Run
+
+1) Open terminal in project root
+cd /path/to/KItten-Typewriter_Piano
+2) Compile
+mkdir -p out
+javac -d out src/java/App.java src/java/ui/*.java src/java/utils/*.java
+3) Run
+java -cp out App
+
+
 On the timer in the top-right corner, the seconds and minutes have been deliberately swapped to confuse the user more at the start and subsequently. (I think we’ll give this about a minute and a half, or around that, and experiment as we go.)
