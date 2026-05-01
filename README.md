@@ -54,4 +54,4 @@ javac -d out src/java/App.java src/java/ui/*.java src/java/utils/*.java
 java -cp out App
 
 
-On the timer in the top-right corner, the seconds and minutes have been deliberately swapped to confuse the user more at the start and subsequently. (I think we’ll give this about a minute and a half, or around that, and experiment as we go.)
+
