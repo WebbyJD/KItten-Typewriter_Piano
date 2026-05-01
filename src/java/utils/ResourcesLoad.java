@@ -7,9 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public final class ResourcesLoad {
+    // utility only, no instance needed
     private ResourcesLoad() {}
 
     public static BufferedImage loadImage(String fileName) {
+        // all ui art is loaded from assets/images
         Path path = Paths.get("assets", "images", fileName);
         try {
             BufferedImage image = ImageIO.read(path.toFile());

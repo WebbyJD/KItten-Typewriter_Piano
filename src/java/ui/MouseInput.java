@@ -12,11 +12,13 @@ public class MouseInput extends MouseAdapter {
 
     @Override
     public void mousePressed(MouseEvent e) {
+        // press handles notes/pedals
         frame.onMousePressed(e.getPoint());
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        // release turns notes/pedals off
         frame.onMouseReleased(e.getPoint());
     }
 

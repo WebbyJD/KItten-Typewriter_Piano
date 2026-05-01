@@ -26,6 +26,7 @@ public final class Keys {
     }
 
     public static boolean isModifier(String label) {
+        // sharp/flat keys are modifiers only
         return "#".equals(label) || "b".equals(label);
     }
 
@@ -52,6 +53,7 @@ public final class Keys {
     }
 
     private static int row1Midi(int col) {
+        // middle row pitch map
         int[] m = {60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77};
         return m[Math.min(col, m.length - 1)];
     }

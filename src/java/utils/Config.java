@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 
 public final class Config {
+    // shared constants for layout + hitboxes
     private Config() {}
 
     public static final int WINDOW_WIDTH = 1024;
@@ -48,6 +49,7 @@ public final class Config {
     public static final Rectangle RIGHT_PEDAL_HITBOX = new Rectangle(545, 663, 100, 92);
 
     public static final Rectangle SHOO_HEART_1 = new Rectangle(326, 571, 52, 52);
+    // click these to dismiss cats when they block the keyboard
     public static final Rectangle SHOO_HEART_2 = new Rectangle(833, 118, 52, 52);
     public static final Rectangle SHOO_HEART_3 = new Rectangle(934, 466, 52, 52);
 

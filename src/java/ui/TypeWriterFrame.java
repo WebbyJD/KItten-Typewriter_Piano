@@ -110,7 +110,6 @@ public class TypeWriterFrame extends JFrame {
                 brokenKeyPoints.add(HOLDER_POINTS[index]);
             }
         }
-        // initialize colors
         for (int i = 0; i < count; i++) {
             fixProgress[i] = 0;
             keyColors[i] = Color.RED;
@@ -197,21 +196,19 @@ public class TypeWriterFrame extends JFrame {
         }
 
         int note = Keys.baseMidiFor(hotspot.label, hotspot.row, hotspot.col);
-        if (note < 0 || channels[0] == null) return;
+        if (note < 0 || channels == null || channels[0] == null) return;
 
         note += accidentalOffset;
         note += shiftHeld ? 12 : 0;
         note += pedalOffset;
         note = Math.max(0, Math.min(127, note));
         channels[0].noteOn(note, masterVolume);
-        //By using channels[0, 1, 2] you can play three different cat sounds
         System.out.println(shiftHeld);
         activeNotes.put(hotspot, note);
 
         // Count how many notes have been played.
         notesPlayed++;
 
-        // After 15 notes, open the second screen.
         if (notesPlayed >= 15 && !secondScreenOpen) {
             secondScreenOpen = true;
             notesPlayed = 0;
@@ -246,13 +243,14 @@ public class TypeWriterFrame extends JFrame {
         }
 
         Integer note = activeNotes.remove(hotspot);
-        if (note != null && channels[0] != null) {
+        if (note != null && channels != null && channels[0] != null) {
             channels[0].noteOff(note);
         }
     }
 
     public void onMouseClicked(Point point) {
         if (secondScreenOpen) {
+            // no click actions here, repair uses drag movement
             return;
         }
 
@@ -284,7 +282,6 @@ public class TypeWriterFrame extends JFrame {
 
     private void handleSettingsClick(Point point) {
         Point modelPoint = toModelPoint(point);
-        // Re-uses the same paw button art in settings screen as a "Back" button.
         if (Config.SETTINGS_BUTTON_HITBOX.contains(modelPoint)) {
             settingsOpen = false;
             keyboardPanel.repaint();
@@ -304,7 +301,7 @@ public class TypeWriterFrame extends JFrame {
         masterVolume = Math.max(1, Math.min(100, value));
 
         // Also updates channel volume controller, so sustained notes feel consistent.
-        if (channels[0] != null) {
+        if (channels != null && channels[0] != null) {
             int midiControllerVolume = Math.max(0, Math.min(127, (int) Math.round(masterVolume * 1.27)));
             channels[0].controlChange(7, midiControllerVolume);
         }
@@ -318,21 +315,26 @@ public class TypeWriterFrame extends JFrame {
     private void initMidi() {
         try {
             synth = MidiSystem.getSynthesizer();
-            Synthesizer synth = MidiSystem.getSynthesizer();
+            synth.open();
+            channels = synth.getChannels();
             File meowFile = new File("assets/audio/meow.sf2");
             Soundbank msb = MidiSystem.getSoundbank(meowFile);
+            if (msb == null) {
+                throw new IllegalStateException("meow.sf2 could not be loaded");
+            }
             Instrument[] meows = msb.getInstruments();
-            synth.open();
+            if (meows.length < 3) {
+                throw new IllegalStateException("meow.sf2 needs at least 3 instruments");
+            }
+
             synth.loadInstrument(meows[0]);
             synth.loadInstrument(meows[1]);
             synth.loadInstrument(meows[2]);
-            channels = synth.getChannels();
             channels[0].programChange(meows[0].getPatch().getBank(), meows[0].getPatch().getProgram());
             channels[1].programChange(meows[1].getPatch().getBank(), meows[1].getPatch().getProgram());
             channels[2].programChange(meows[2].getPatch().getBank(), meows[2].getPatch().getProgram());
             setMasterVolume(masterVolume);
-        } catch (Exception ignored) {
-            // Keep UI functional even if MIDI is unavailable on this machine.
+        } catch (Exception e) {
             channels = null;
         }
     }
@@ -396,6 +398,7 @@ public class TypeWriterFrame extends JFrame {
     }
 
     private void startCatTimer() {
+        // cats interrupt every 25s if they are not already on the keyboard
         catTimer = new Timer(25000, e -> {
             if (!catsBlocking) {
                 catsBlocking = true;
@@ -490,7 +493,7 @@ public class TypeWriterFrame extends JFrame {
     }
 
     private void stopAllNotes() {
-        if (channels[0] != null) {
+        if (channels != null && channels[0] != null) {
             for (Integer note : activeNotes.values()) {
                 channels[0].noteOff(note);
             }
@@ -512,7 +515,6 @@ public class TypeWriterFrame extends JFrame {
             double dy = p.y - target.y;
             double dist = Math.sqrt(dx*dx + dy*dy);
 
-            // Cursor must be inside the ring
                 if (dist < 40 && dist > 20) {
                     // Add progress based on movement amount
                     fixProgress[i] += 2.5; // tune speed here
@@ -529,7 +531,6 @@ public class TypeWriterFrame extends JFrame {
             }
         }
         
-        // Check if all keys are fixed
         boolean allFixed = true;
         for (boolean f : fixedKeys) {
             if (!f) { allFixed = false; break; }
@@ -570,6 +571,7 @@ public class TypeWriterFrame extends JFrame {
         }
 
         private void drawPlayScene(Graphics2D g2) {
+            // normal gameplay scene layers
             drawScaled(g2, assets.backOfKeyboard);
             drawScaled(g2, assets.keysBackground);
             drawKeyLabels(g2);
@@ -581,14 +583,12 @@ public class TypeWriterFrame extends JFrame {
             if (catsBlocking) {
                 drawScaled(g2, assets.catsOnTopOfKeyboard);
                 drawScaled(g2, assets.shooToClick);
-                g2.setColor(Color.WHITE);
-                g2.setFont(new Font("SansSerif", Font.BOLD, 22));
-                g2.drawString("Cats blocked the keyboard! Click all hearts to shoo them.", 170, 60);
+                drawOutlinedText(g2, "click the hearts to shoo", 230, 170, 35);
             }
 
             drawScaled(g2, assets.settingsButtonUnder);
             drawScaled(g2, assets.settingsButtonOutline);
-            drawSettingsButtonText(g2, "Sound");
+            drawSettingsButtonText(g2, "Settings");
             drawScaled(g2, assets.border);
         }
 
@@ -599,7 +599,6 @@ public class TypeWriterFrame extends JFrame {
             drawScaled(g2, assets.Holders);
             drawScaled(g2, assets.Handels);
 
-            // Draw broken key points
             for (int i = 0; i < brokenKeyPoints.size(); i++) {
                 g2.setColor(keyColors[i]);
                 Point p = brokenKeyPoints.get(i);
@@ -720,7 +719,7 @@ public class TypeWriterFrame extends JFrame {
             g2.setFont(new Font("SansSerif", Font.BOLD, text.length() > 1 ? 18 : 28));
             FontMetrics metrics = g2.getFontMetrics();
             int x = button.x + (button.width - metrics.stringWidth(text)) / 2 + 4;
-            int y = button.y + (button.height + metrics.getAscent()) / 2 + 6;
+            int y = button.y + (button.height + metrics.getAscent()) / 2 + 10;
             g2.drawString(text, x, y);
         }
 
@@ -740,13 +739,24 @@ public class TypeWriterFrame extends JFrame {
             g2.drawString(text, x + padding, y + metrics.getAscent() + 2);
         }
 
+        private void drawOutlinedText(Graphics2D g2, String text, int x, int y, int fontSize) {
+            g2.setFont(new Font("SansSerif", Font.BOLD, fontSize));
+            g2.setColor(Color.BLACK);
+            g2.drawString(text, x - 2, y);
+            g2.drawString(text, x + 2, y);
+            g2.drawString(text, x, y - 2);
+            g2.drawString(text, x, y + 2);
+            g2.setColor(CREAM_WHITE);
+            g2.drawString(text, x, y);
+        }
+
         private void drawScaled(Graphics2D g2, java.awt.image.BufferedImage image) {
             if (image == null) return;
             g2.drawImage(image, 0, 0, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT, null);
         }
 
         private void drawKeyLabels(Graphics2D g2) {
-            g2.setColor(new Color(45, 45, 45));
+            g2.setColor(CREAM_WHITE);
             g2.setFont(new Font("SansSerif", Font.BOLD, 21));
 
             for (KeyHotspot hotspot : keyHotspots) {

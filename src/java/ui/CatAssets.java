@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import utils.ResourcesLoad;
 
 public final class CatAssets {
+    // main piano scene layers
     public final BufferedImage backOfKeyboard = ResourcesLoad.loadImage("BackOfKeyboard.png");
     public final BufferedImage border = ResourcesLoad.loadImage("Border.png");
     public final BufferedImage catHeadsAndTailPeadles = ResourcesLoad.loadImage("CatHeadsAndTailPeadles.png");
@@ -14,6 +15,7 @@ public final class CatAssets {
     public final BufferedImage settingsButtonOutline = ResourcesLoad.loadImage("SettingsButtonOutline.png");
     public final BufferedImage settingsButtonUnder = ResourcesLoad.loadImage("SettingsButtonUnder.png");
 
+    // fix-screen scene layers
     public final BufferedImage backOfClock = ResourcesLoad.loadImage("secondScreen_clock.png");
     public final BufferedImage strings = ResourcesLoad.loadImage("secondScreen_strings.png");
     public final BufferedImage secondScreenBack = ResourcesLoad.loadImage("secondScreen_back.png");
